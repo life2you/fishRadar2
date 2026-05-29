@@ -1,0 +1,90 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: fishradar2-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: fishradar2
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: fishradar2-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api-go:
+    build:
+      context: ../services/api-go
+    container_name: fishradar2-api-go
+    env_file:
+      - .env
+    environment:
+      APP_DATABASE_URL: ${APP_DATABASE_URL:-mysql://root:123456@mysql:3306/fishradar2?charset=utf8mb4}
+      APP_ENV: ${APP_ENV:-development}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      AUTH_SESSION_COOKIE_NAME: ${AUTH_SESSION_COOKIE_NAME:-auth_session}
+      QUEUE_BACKEND: ${QUEUE_BACKEND:-redis}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      REDIS_QUEUE_NAME: ${REDIS_QUEUE_NAME:-fishradar2:worker_jobs}
+      REDIS_EVENT_CHANNEL: ${REDIS_EVENT_CHANNEL:-fishradar2:events}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  worker-py:
+    build:
+      context: ../services/worker-py
+    container_name: fishradar2-worker-py
+    env_file:
+      - .env
+    environment:
+      APP_DATABASE_URL: ${APP_DATABASE_URL:-mysql://root:123456@mysql:3306/fishradar2?charset=utf8mb4}
+      APP_ENV: ${APP_ENV:-development}
+      QUEUE_BACKEND: ${QUEUE_BACKEND:-redis}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      REDIS_QUEUE_NAME: ${REDIS_QUEUE_NAME:-fishradar2:worker_jobs}
+      REDIS_EVENT_CHANNEL: ${REDIS_EVENT_CHANNEL:-fishradar2:events}
+      WORKER_ID: fishradar2-dev-worker
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../services/worker-py/logs:/app/logs
+      - ../services/worker-py/images:/app/images
+      - ../services/worker-py/state:/app/state
+
+  web-ui:
+    build:
+      context: ../services/web-ui
+    container_name: fishradar2-web-ui
+    depends_on:
+      - api-go
+    ports:
+      - "8088:80"
+
+volumes:
+  mysql_data:
+  redis_data:

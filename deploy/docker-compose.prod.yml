@@ -1,0 +1,62 @@
+services:
+  api-go:
+    image: ${API_GO_IMAGE}
+    container_name: fishradar2-api-go
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_DATABASE_URL: ${APP_DATABASE_URL}
+      APP_ENV: ${APP_ENV:-production}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+      AUTH_SESSION_COOKIE_NAME: ${AUTH_SESSION_COOKIE_NAME:-auth_session}
+      QUEUE_BACKEND: ${QUEUE_BACKEND:-redis}
+      REDIS_URL: ${REDIS_URL}
+      REDIS_QUEUE_NAME: ${REDIS_QUEUE_NAME:-fishradar2:worker_jobs}
+      REDIS_EVENT_CHANNEL: ${REDIS_EVENT_CHANNEL:-fishradar2:events}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  worker-py:
+    image: ${WORKER_PY_IMAGE}
+    container_name: fishradar2-worker-py
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_DATABASE_URL: ${APP_DATABASE_URL}
+      APP_ENV: ${APP_ENV:-production}
+      QUEUE_BACKEND: ${QUEUE_BACKEND:-redis}
+      REDIS_URL: ${REDIS_URL}
+      REDIS_QUEUE_NAME: ${REDIS_QUEUE_NAME:-fishradar2:worker_jobs}
+      REDIS_EVENT_CHANNEL: ${REDIS_EVENT_CHANNEL:-fishradar2:events}
+      WORKER_ID: ${WORKER_ID:-fishradar2-prod-worker}
+    volumes:
+      - ../services/worker-py/logs:/app/logs
+      - ../services/worker-py/images:/app/images
+      - ../services/worker-py/state:/app/state
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f worker_job_runner.py >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  web-ui:
+    image: ${WEB_UI_IMAGE}
+    container_name: fishradar2-web-ui
+    restart: unless-stopped
+    depends_on:
+      api-go:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
