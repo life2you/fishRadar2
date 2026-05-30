@@ -46,12 +46,12 @@ const visibleTenantAnnouncements = computed(() =>
 
 function getAnnouncementTone(level: string) {
   if (level === 'success') {
-    return 'border-emerald-200 bg-emerald-50/90 text-emerald-800'
+    return 'border-emerald-950 bg-emerald-950/20 text-emerald-300'
   }
   if (level === 'warning') {
-    return 'border-amber-200 bg-amber-50/92 text-amber-900'
+    return 'border-amber-950 bg-amber-950/20 text-amber-300'
   }
-  return 'border-sky-200 bg-sky-50/92 text-sky-900'
+  return 'border-cyan-950 bg-cyan-950/20 text-cyan-300'
 }
 
 async function loadTenantAnnouncements() {
@@ -79,7 +79,7 @@ onMounted(() => {
 <template>
   <div
     v-if="isTenant"
-    class="relative min-h-screen w-full overflow-hidden bg-[linear-gradient(180deg,#fbf8f1_0%,#f2f6ef_44%,#eef5f3_100%)] selection:bg-primary/15"
+    class="relative min-h-screen w-full overflow-hidden bg-slate-950 text-slate-100 selection:bg-primary/20"
   >
     <a
       href="#main-content"
@@ -89,11 +89,10 @@ onMounted(() => {
     </a>
 
     <div aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden">
-      <div class="absolute left-[-8%] top-[-3%] h-[34rem] w-[34rem] rounded-full bg-[#cfe0bf]/28 blur-[140px]"></div>
-      <div class="absolute right-[-10%] top-[8%] h-[28rem] w-[28rem] rounded-full bg-[#b8d7ce]/24 blur-[130px]"></div>
-      <div class="absolute bottom-[-14%] left-[24%] h-[28rem] w-[28rem] rounded-full bg-[#f0d9b6]/22 blur-[135px]"></div>
-      <div class="absolute inset-x-[10%] top-[8.5rem] h-px bg-gradient-to-r from-transparent via-[#a8beaa]/45 to-transparent"></div>
-      <div class="absolute inset-x-[6%] bottom-0 h-[38%] bg-[radial-gradient(circle_at_bottom,rgba(255,255,255,0.22),transparent_68%)]"></div>
+      <div class="absolute left-[-10%] top-[-5%] h-[38rem] w-[38rem] rounded-full bg-emerald-500/5 blur-[150px]"></div>
+      <div class="absolute right-[-12%] top-[5%] h-[32rem] w-[32rem] rounded-full bg-cyan-500/5 blur-[140px]"></div>
+      <div class="absolute bottom-[-15%] left-[20%] h-[32rem] w-[32rem] rounded-full bg-indigo-500/5 blur-[145px]"></div>
+      <div class="absolute inset-x-[10%] top-[8.5rem] h-px bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent"></div>
     </div>
 
     <TheHeader class="relative z-20" />
@@ -111,7 +110,7 @@ onMounted(() => {
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
                   <p class="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">平台公告</p>
-                  <span class="rounded-full border border-current/15 bg-white/55 px-2 py-0.5 text-[11px] font-semibold">
+                  <span class="rounded-full border border-current/15 bg-white/5 px-2 py-0.5 text-[11px] font-semibold">
                     {{ item.level === 'warning' ? '维护提醒' : item.level === 'success' ? '完成通知' : '升级通知' }}
                   </span>
                 </div>
@@ -122,7 +121,7 @@ onMounted(() => {
                 v-if="item.dismissible"
                 variant="ghost"
                 size="icon"
-                class="h-8 w-8 shrink-0 rounded-full text-current hover:bg-white/55"
+                class="h-8 w-8 shrink-0 rounded-full text-current hover:bg-white/5"
                 @click="dismissAnnouncement(item)"
               >
                 <X class="h-4 w-4" />
@@ -139,7 +138,7 @@ onMounted(() => {
     </main>
   </div>
 
-  <div v-else class="relative min-h-screen w-full flex flex-col bg-[linear-gradient(180deg,#f7f8f2_0%,#f1f6f2_46%,#eef4f6_100%)] selection:bg-primary/15">
+  <div v-else class="relative min-h-screen w-full flex flex-col bg-slate-950 text-slate-100 selection:bg-primary/20">
     <a
       href="#main-content"
       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[120] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
@@ -149,9 +148,9 @@ onMounted(() => {
 
     <!-- 背景装饰渐变 -->
     <div aria-hidden="true" class="fixed inset-0 pointer-events-none overflow-hidden">
-      <div class="absolute -top-[12%] -left-[8%] h-[42%] w-[38%] rounded-full bg-[#c8dacb]/24 blur-[130px]"></div>
-      <div class="absolute top-[16%] -right-[8%] h-[38%] w-[34%] rounded-full bg-[#c7dbe8]/28 blur-[120px]"></div>
-      <div class="absolute -bottom-[12%] left-[16%] h-[34%] w-[30%] rounded-full bg-[#ead5b8]/20 blur-[110px]"></div>
+      <div class="absolute -top-[12%] -left-[8%] h-[42%] w-[38%] rounded-full bg-emerald-500/5 blur-[140px]"></div>
+      <div class="absolute top-[16%] -right-[8%] h-[38%] w-[34%] rounded-full bg-cyan-500/5 blur-[130px]"></div>
+      <div class="absolute -bottom-[12%] left-[16%] h-[34%] w-[30%] rounded-full bg-indigo-500/5 blur-[120px]"></div>
     </div>
 
     <!-- Header -->
@@ -165,7 +164,7 @@ onMounted(() => {
           :aria-label="t('common.close')"
           @click="closeMobileNav"
         />
-        <aside class="relative h-full w-72 border-r border-slate-200/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(244,247,250,0.94)_100%)] p-4 shadow-2xl backdrop-blur-xl">
+        <aside class="relative h-full w-72 border-r border-slate-900 bg-[linear-gradient(180deg,#070a0e_0%,#090d14_100%)] p-4 shadow-2xl backdrop-blur-xl">
           <TheSidebar class="pt-16" @navigate="closeMobileNav" />
         </aside>
       </div>
@@ -173,7 +172,7 @@ onMounted(() => {
 
     <div class="flex flex-grow relative z-10">
       <!-- Sidebar -->
-      <aside class="hidden md:block w-64 flex-shrink-0 border-r border-slate-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(243,246,249,0.92)_100%)] backdrop-blur-sm">
+      <aside class="hidden md:block w-64 flex-shrink-0 border-r border-slate-900 bg-[linear-gradient(180deg,rgba(7,10,14,0.85)_0%,rgba(9,13,20,0.85)_100%)] backdrop-blur-sm">
         <TheSidebar class="sticky top-16 h-[calc(100vh-4rem)] p-4" />
       </aside>
 
