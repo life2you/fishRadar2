@@ -20,18 +20,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: api-go
-            context: ./services/api-go
-            dockerfile: ./services/api-go/Dockerfile
-            image_suffix: fishradar2-api-go
-          - name: worker-py
-            context: ./services/worker-py
-            dockerfile: ./services/worker-py/Dockerfile
-            image_suffix: fishradar2-worker-py
-          - name: web-ui
-            context: ./services/web-ui
-            dockerfile: ./services/web-ui/Dockerfile
-            image_suffix: fishradar2-web-ui
+          - name: radar-control
+            context: ./services/radar-control
+            dockerfile: ./services/radar-control/Dockerfile
+            image_suffix: fishradar2-radar-control
+          - name: radar-probe
+            context: ./services/radar-probe
+            dockerfile: ./services/radar-probe/Dockerfile
+            image_suffix: fishradar2-radar-probe
+          - name: radar-portal
+            context: ./services/radar-portal
+            dockerfile: ./services/radar-portal/Dockerfile
+            image_suffix: fishradar2-radar-portal
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3

@@ -11,14 +11,14 @@ htmlcov/
 __pycache__/
 *.pyc
 
-services/web-ui/dist/
-services/web-ui/node_modules/
+services/radar-portal/dist/
+services/radar-portal/node_modules/
 
-services/worker-py/.pytest_cache/
-services/worker-py/__pycache__/
-services/worker-py/logs/
-services/worker-py/images/
-services/worker-py/state/
-services/worker-py/data/
+services/radar-probe/.pytest_cache/
+services/radar-probe/__pycache__/
+services/radar-probe/logs/
+services/radar-probe/images/
+services/radar-probe/state/
+services/radar-probe/data/
 
 deploy/.env

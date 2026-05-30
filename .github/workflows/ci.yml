@@ -9,38 +9,38 @@ on:
   pull_request:
 
 jobs:
-  api-go:
+  radar-control:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: services/api-go
+        working-directory: services/radar-control
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
-          go-version-file: services/api-go/go.mod
+          go-version-file: services/radar-control/go.mod
       - run: go test ./...
 
-  web-ui:
+  radar-portal:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: services/web-ui
+        working-directory: services/radar-portal
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: services/web-ui/package-lock.json
+          cache-dependency-path: services/radar-portal/package-lock.json
       - run: npm ci
       - run: npm run build
 
-  worker-py:
+  radar-probe:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: services/worker-py
+        working-directory: services/radar-probe
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6

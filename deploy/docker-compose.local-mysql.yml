@@ -13,10 +13,10 @@ services:
       timeout: 5s
       retries: 10
 
-  api-go:
+  radar-control:
     build:
-      context: ../services/api-go
-    container_name: fishradar2-api-go
+      context: ../services/radar-control
+    container_name: fishradar2-radar-control
     env_file:
       - .env
     environment:
@@ -37,10 +37,10 @@ services:
       - default
       - mysql8-shared
 
-  worker-py:
+  radar-probe:
     build:
-      context: ../services/worker-py
-    container_name: fishradar2-worker-py
+      context: ../services/radar-probe
+    container_name: fishradar2-radar-probe
     env_file:
       - .env
     environment:
@@ -55,19 +55,19 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ../services/worker-py/logs:/app/logs
-      - ../services/worker-py/images:/app/images
-      - ../services/worker-py/state:/app/state
+      - ../services/radar-probe/logs:/app/logs
+      - ../services/radar-probe/images:/app/images
+      - ../services/radar-probe/state:/app/state
     networks:
       - default
       - mysql8-shared
 
-  web-ui:
+  radar-portal:
     build:
-      context: ../services/web-ui
-    container_name: fishradar2-web-ui
+      context: ../services/radar-portal
+    container_name: fishradar2-radar-portal
     depends_on:
-      - api-go
+      - radar-control
     ports:
       - "8088:80"
 

@@ -3,22 +3,22 @@ SHELL := /bin/zsh
 .PHONY: api-dev api-test worker-check worker-daemon web-install web-build dev-up dev-down
 
 api-dev:
-	cd services/api-go && go run ./cmd/server
+	cd services/radar-control && go run ./cmd/server
 
 api-test:
-	cd services/api-go && go test ./...
+	cd services/radar-control && go test ./...
 
 worker-check:
-	python3 -m compileall services/worker-py/src services/worker-py/spider_v2.py services/worker-py/tools
+	python3 -m compileall services/radar-probe/src services/radar-probe/spider_v2.py services/radar-probe/tools
 
 worker-daemon:
-	cd services/worker-py && python3 tools/worker_job_runner.py
+	cd services/radar-probe && python3 tools/worker_job_runner.py
 
 web-install:
-	cd services/web-ui && npm install
+	cd services/radar-portal && npm install
 
 web-build:
-	cd services/web-ui && npm run build
+	cd services/radar-portal && npm run build
 
 dev-up:
 	cd deploy && docker compose -f docker-compose.dev.yml up --build -d

@@ -1,7 +1,7 @@
 services:
-  api-go:
+  radar-control:
     image: ${API_GO_IMAGE}
-    container_name: fishradar2-api-go
+    container_name: fishradar2-radar-control
     restart: unless-stopped
     env_file:
       - .env
@@ -22,9 +22,9 @@ services:
       timeout: 5s
       retries: 10
 
-  worker-py:
+  radar-probe:
     image: ${WORKER_PY_IMAGE}
-    container_name: fishradar2-worker-py
+    container_name: fishradar2-radar-probe
     restart: unless-stopped
     env_file:
       - .env
@@ -37,21 +37,21 @@ services:
       REDIS_EVENT_CHANNEL: ${REDIS_EVENT_CHANNEL:-fishradar2:events}
       WORKER_ID: ${WORKER_ID:-fishradar2-prod-worker}
     volumes:
-      - ../services/worker-py/logs:/app/logs
-      - ../services/worker-py/images:/app/images
-      - ../services/worker-py/state:/app/state
+      - ../services/radar-probe/logs:/app/logs
+      - ../services/radar-probe/images:/app/images
+      - ../services/radar-probe/state:/app/state
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f worker_job_runner.py >/dev/null || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 10
 
-  web-ui:
+  radar-portal:
     image: ${WEB_UI_IMAGE}
-    container_name: fishradar2-web-ui
+    container_name: fishradar2-radar-portal
     restart: unless-stopped
     depends_on:
-      api-go:
+      radar-control:
         condition: service_healthy
     ports:
       - "80:80"

@@ -4,20 +4,20 @@
 
 ## 已完成
 
-- Vue 3 前端保留并对接 `api-go`
+- Vue 3 前端保留并对接 `radar-control`
 - Go 控制面承接绝大多数前端直连 API
-- Python 执行链独立为 `worker-py`
+- Python 执行链独立为 `radar-probe`
 - 任务启动、停止、AI 任务生成、结果重分析均已进入统一作业队列
 - Redis 已承担：
   - 作业实时投递
   - 实时事件总线
-- `/ws` 已在 `api-go` 实现，前端实时刷新链恢复
+- `/ws` 已在 `radar-control` 实现，前端实时刷新链恢复
 - 开发 / 生产 compose 骨架齐全
 - CI / 镜像工作流已补齐
 
 ## 仍保留但不影响生产的部分
 
-- `services/worker-py/legacy/web_api`
+- `services/radar-probe/legacy/web_api`
   - 仅作迁移参考和历史测试承载
   - 不属于默认运行链
   - 生产部署不依赖它
@@ -32,9 +32,9 @@
 如果要直接上生产，优先做：
 
 1. 生成并固定三套镜像：
-   - `api-go`
-   - `worker-py`
-   - `web-ui`
+   - `radar-control`
+   - `radar-probe`
+   - `radar-portal`
 2. 按 `deploy/.env.prod.example` 配好：
    - `APP_DATABASE_URL`
    - `REDIS_URL`

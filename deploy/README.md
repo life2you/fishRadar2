@@ -5,11 +5,11 @@
 ## 当前已提供
 
 - `docker-compose.dev.yml`
-  - `mysql`
-  - `redis`
-  - `api-go`
-  - `worker-py`
-  - `web-ui`
+- `mysql`
+- `redis`
+- `radar-control`
+- `radar-probe`
+- `radar-portal`
 - `.env.example`
   - 本地开发/联调用的最小环境变量示例
 
@@ -30,14 +30,14 @@ docker compose -f docker-compose.dev.yml up --build -d
 
 ## 当前运行模型
 
-- `api-go` 把任务写入 `worker_jobs`
+- `radar-control` 把任务写入 `worker_jobs`
 - 当 `QUEUE_BACKEND=redis` 时：
   - MySQL 仍保存作业元数据
   - Redis 负责实时投递
 - `REDIS_EVENT_CHANNEL` 用于：
-  - `worker-py` 发布 `tasks_updated / task_status_changed / results_updated`
-  - `api-go` 订阅后通过 `/ws` 广播给前端
-- `worker-py` 的 `tools/worker_job_runner.py` 会优先消费 Redis 队列，取不到再回退到 MySQL 轮询
+  - `radar-probe` 发布 `tasks_updated / task_status_changed / results_updated`
+  - `radar-control` 订阅后通过 `/ws` 广播给前端
+- `radar-probe` 的 `tools/worker_job_runner.py` 会优先消费 Redis 队列，取不到再回退到 MySQL 轮询
 
 ## 复用本机已有 mysql8 容器
 
@@ -55,12 +55,12 @@ docker compose -f docker-compose.local-mysql.yml up --build -d
 本地复用模式说明：
 
 - 不再启动 `fishradar2-mysql`
-- `api-go` / `worker-py` 直接连现有 `mysql8`
+- `radar-control` / `radar-probe` 直接连现有 `mysql8`
 - 仍然启动：
   - `fishradar2-redis`
-  - `fishradar2-api-go`
-  - `fishradar2-worker-py`
-  - `fishradar2-web-ui`
+  - `fishradar2-radar-control`
+  - `fishradar2-radar-probe`
+  - `fishradar2-radar-portal`
 
 ## 生产骨架
 
@@ -81,9 +81,9 @@ docker compose -f docker-compose.prod.yml up -d
 
 - MySQL / Redis 由外部提供
 - `.env.prod.example` 中的 `your-mysql-host` / `your-redis-host` 需要替换成真实地址
-- `api-go` / `worker-py` / `web-ui` 使用预构建镜像
-- `web-ui` 对外暴露 `80`
-- `api-go` 仍保留 `8080`，便于内网调试与反代
+- `radar-control` / `radar-probe` / `radar-portal` 使用预构建镜像
+- `radar-portal` 对外暴露 `80`
+- `radar-control` 仍保留 `8080`，便于内网调试与反代
 
 ## 需要提前准备的镜像变量
 

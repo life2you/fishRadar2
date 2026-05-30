@@ -2,9 +2,9 @@
 
 这份文档描述 `fishRadar2` 当前可用于生产的主业务流转，重点说明：
 
-- `web-ui`
-- `api-go`
-- `worker-py`
+- `radar-portal`
+- `radar-control`
+- `radar-probe`
 - `MySQL`
 - `Redis`
 
@@ -13,21 +13,21 @@
 ## 1. 登录与会话
 
 ```text
-浏览器 -> web-ui -> api-go(/auth/login) -> MySQL(users, auth_sessions)
+浏览器 -> radar-portal -> radar-control(/auth/login) -> MySQL(users, auth_sessions)
 ```
 
 流程：
 
-1. 用户在 `web-ui` 提交用户名密码。
-2. `api-go` 在 `users` 中校验账号与密码哈希。
-3. 登录成功后，`api-go` 在 `auth_sessions` 中创建会话。
+1. 用户在 `radar-portal` 提交用户名密码。
+2. `radar-control` 在 `users` 中校验账号与密码哈希。
+3. 登录成功后，`radar-control` 在 `auth_sessions` 中创建会话。
 4. 浏览器收到会话 Cookie。
 5. 后续 API 请求与 `/ws` WebSocket 握手都依赖这个会话 Cookie。
 
 ## 2. 页面加载与查询
 
 ```text
-浏览器 -> web-ui -> api-go -> MySQL
+浏览器 -> radar-portal -> radar-control -> MySQL
 ```
 
 适用范围：
@@ -41,29 +41,29 @@
 - 通知配置
 - 卡密与租户管理
 
-这类请求全部由 `api-go` 承担，不再依赖 Python 控制面。
+这类请求全部由 `radar-control` 承担，不再依赖 Python 控制面。
 
 ## 3. 创建普通任务
 
 ```text
-浏览器 -> web-ui -> api-go(/api/tasks or /api/tasks/generate)
+浏览器 -> radar-portal -> radar-control(/api/tasks or /api/tasks/generate)
                            -> MySQL(tasks / prompt_documents / worker_jobs)
 ```
 
 ### 关键词模式
 
 1. 前端直接调用 `POST /api/tasks/generate` 或 `POST /api/tasks`。
-2. `api-go` 校验租户权限、AI 能力、任务字段。
+2. `radar-control` 校验租户权限、AI 能力、任务字段。
 3. 关键词模式会直接写入 `tasks`。
-4. `api-go` 发布 `tasks_updated` 实时事件。
+4. `radar-control` 发布 `tasks_updated` 实时事件。
 
 ### AI 模式
 
 1. 前端调用 `POST /api/tasks/generate`。
-2. `api-go` 不在本进程里直接生成，而是创建 `worker_jobs(generate_task)`。
+2. `radar-control` 不在本进程里直接生成，而是创建 `worker_jobs(generate_task)`。
 3. 作业元数据写入 MySQL。
 4. 如果 `QUEUE_BACKEND=redis`，同时把作业消息推入 Redis 队列。
-5. `worker-py` 消费生成作业，调用 Python bridge：
+5. `radar-probe` 消费生成作业，调用 Python bridge：
    - `tools/task_generation_bridge.py`
 6. 生成完成后：
    - 新任务写入 `tasks`
@@ -75,21 +75,21 @@
 ## 4. 启动任务
 
 ```text
-web-ui -> api-go(/api/tasks/start/{id})
+radar-portal -> radar-control(/api/tasks/start/{id})
        -> MySQL(worker_jobs)
        -> Redis(list: worker_jobs) [可选]
-       -> worker-py -> spider_v2.py
+       -> radar-probe -> spider_v2.py
 ```
 
 流程：
 
 1. 前端点击“启动任务”。
-2. `api-go` 校验：
+2. `radar-control` 校验：
    - 租户是否可用
    - 任务是否启用
    - AI 任务是否允许当前租户使用
-3. `api-go` 写入 `worker_jobs(start_task)`。
-4. `worker-py/tools/worker_job_runner.py` 领取作业。
+3. `radar-control` 写入 `worker_jobs(start_task)`。
+4. `radar-probe/tools/worker_job_runner.py` 领取作业。
 5. Worker 启动：
    - `python spider_v2.py --task-id <id>`
 6. 启动成功后：
@@ -100,17 +100,17 @@ web-ui -> api-go(/api/tasks/start/{id})
 ## 5. 停止任务
 
 ```text
-web-ui -> api-go(/api/tasks/stop/{id})
+radar-portal -> radar-control(/api/tasks/stop/{id})
        -> MySQL(worker_jobs)
        -> Redis(list: worker_jobs) [可选]
-       -> worker-py -> 终止 spider_v2.py
+       -> radar-probe -> 终止 spider_v2.py
 ```
 
 流程：
 
 1. 前端点击“停止任务”。
-2. `api-go` 写入 `worker_jobs(stop_task)`。
-3. `worker-py` 领取作业。
+2. `radar-control` 写入 `worker_jobs(stop_task)`。
+3. `radar-probe` 领取作业。
 4. Worker 终止对应的任务进程组。
 5. 更新：
    - `tasks.is_running = 0`
@@ -120,7 +120,7 @@ web-ui -> api-go(/api/tasks/stop/{id})
 ## 6. 抓取与分析执行
 
 ```text
-worker-py(spider_v2.py / scraper.py)
+radar-probe(spider_v2.py / scraper.py)
   -> 闲鱼
   -> 登录态
   -> 图片下载
@@ -148,7 +148,7 @@ worker-py(spider_v2.py / scraper.py)
 ## 7. 结果页刷新
 
 ```text
-worker-py / api-go -> Redis(pubsub: fishradar2:events) -> api-go(/ws) -> web-ui
+radar-probe / radar-control -> Redis(pubsub: fishradar2:events) -> radar-control(/ws) -> radar-portal
 ```
 
 事件类型：
@@ -171,19 +171,19 @@ worker-py / api-go -> Redis(pubsub: fishradar2:events) -> api-go(/ws) -> web-ui
 ## 8. 结果重分析
 
 ```text
-管理员 web-ui -> api-go(/api/results/{filename}/reanalyze)
+管理员 radar-portal -> radar-control(/api/results/{filename}/reanalyze)
              -> MySQL(worker_jobs)
              -> Redis(list) [可选]
-             -> worker-py/tools/result_reanalysis_bridge.py
+             -> radar-probe/tools/result_reanalysis_bridge.py
              -> MySQL(result_items 更新)
-             -> Redis(pubsub) -> /ws -> web-ui
+             -> Redis(pubsub) -> /ws -> radar-portal
 ```
 
 流程：
 
 1. 管理员发起重分析。
-2. `api-go` 创建 `worker_jobs(reanalyze_result)`。
-3. `worker-py` 领取作业并运行重分析 bridge。
+2. `radar-control` 创建 `worker_jobs(reanalyze_result)`。
+3. `radar-probe` 领取作业并运行重分析 bridge。
 4. bridge 完成后回写结果。
 5. 发布 `results_updated`。
 6. 前端自动刷新结果页和总览。
@@ -193,38 +193,38 @@ worker-py / api-go -> Redis(pubsub: fishradar2:events) -> api-go(/ws) -> web-ui
 ### 公告
 
 ```text
-管理员 -> api-go(/api/announcements) -> MySQL -> web-ui
+管理员 -> radar-control(/api/announcements) -> MySQL -> radar-portal
 ```
 
-- 公告配置由 `api-go` 管理。
+- 公告配置由 `radar-control` 管理。
 - 租户页面通过普通 API 获取生效公告。
 
 ### 测试通知
 
 ```text
-web-ui -> api-go -> Python bridge -> 通知渠道
+radar-portal -> radar-control -> Python bridge -> 通知渠道
 ```
 
 - 平台通知测试
 - 租户通知测试
 - AI 账号测试
 
-这些工具动作仍通过 Python bridge 调用原有能力，但入口已经统一在 `api-go`。
+这些工具动作仍通过 Python bridge 调用原有能力，但入口已经统一在 `radar-control`。
 
 ## 10. 生产运行建议
 
 生产环境推荐的职责拆分：
 
-- `web-ui`
-- `api-go`
-- `worker-py`
+- `radar-portal`
+- `radar-control`
+- `radar-probe`
 - `MySQL`
 - `Redis`
 
 推荐模式：
 
-1. `api-go` 只负责控制面和查询
-2. `worker-py` 只负责执行面
+1. `radar-control` 只负责控制面和查询
+2. `radar-probe` 只负责执行面
 3. `Redis` 同时承担：
    - 作业实时投递
    - 事件总线
